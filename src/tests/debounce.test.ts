@@ -1,7 +1,6 @@
 import { describe, test, expect, afterEach, vi } from "vitest";
 import { renderHook, act } from "@testing-library/react";
 import { useDebounceFn, useDebounceValue } from "../hooks/debouce";
-import { aC } from "vitest/dist/chunks/reporters.QZ837uWx.js";
 
 describe("tests for debounce.ts", () => {
 	describe("tests for useDebounceValue", () => {
