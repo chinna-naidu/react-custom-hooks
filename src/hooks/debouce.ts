@@ -47,6 +47,7 @@ export const useDebounceFn = <T extends (...args: any[]) => any>(
 		(...args: any[]) => {
 			// checking if this is is the first call for leading execution
 			const isFirstCall = lastFnCalledRef.current === null;
+			console.log("isFirstCall", isFirstCall);
 
 			const isLeading = isFirstCall && leading;
 

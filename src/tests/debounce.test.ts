@@ -1,6 +1,7 @@
 import { describe, test, expect, afterEach, vi } from "vitest";
 import { renderHook, act } from "@testing-library/react";
 import { useDebounceFn, useDebounceValue } from "../hooks/debouce";
+import { aC } from "vitest/dist/chunks/reporters.QZ837uWx.js";
 
 describe("tests for debounce.ts", () => {
 	describe("tests for useDebounceValue", () => {
@@ -158,7 +159,81 @@ describe("tests for debounce.ts", () => {
 			vi.clearAllTimers();
 		});
 
-		test("it calls the function for the first time when trailing is called even when delay is not done", () => {
+		test("it calls the function for the first time when leading is passed even when delay is not done", () => {
+			const fn = vi.fn();
+
+			const { result, rerender } = renderHook(
+				({ value, delay, config }) => useDebounceFn(value, delay, config),
+				{
+					initialProps: {
+						value: fn,
+						delay: 500,
+						config: {
+							leading: true,
+						},
+					},
+				},
+			);
+
+			act(() => {
+				result.current[0]();
+			});
+
+			expect(fn).toHaveBeenCalledOnce();
+		});
+
+		test("it calls the function only after the delay if leading is not passed ", () => {
+			const fn = vi.fn();
+
+			const { result, rerender } = renderHook(
+				({ value, delay }) => useDebounceFn(value, delay),
+				{
+					initialProps: {
+						value: fn,
+						delay: 500,
+					},
+				},
+			);
+
+			act(() => {
+				result.current[0]();
+			});
+
+			expect(fn).not.toHaveBeenCalled();
+
+			act(() => {
+				vi.advanceTimersByTime(500);
+			});
+
+			expect(fn).toHaveBeenCalledOnce();
+		});
+
+		test("it shouldn't call the function when cancel called before delay is completed", () => {
+			const fn = vi.fn();
+
+			const { result, rerender } = renderHook(
+				({ value, delay }) => useDebounceFn(value, delay),
+				{
+					initialProps: {
+						value: fn,
+						delay: 500,
+					},
+				},
+			);
+
+			act(() => {
+				// calling cancel
+				result.current[1]();
+			});
+
+			act(() => {
+				vi.advanceTimersByTime(500);
+			});
+
+			expect(fn).not.toHaveBeenCalled();
+		});
+
+		test("it should call the function when maxDelay, trailing is passed even when the actual delay is skippied", () => {
 			const fn = vi.fn();
 
 			const { result, rerender } = renderHook(
@@ -169,15 +244,43 @@ describe("tests for debounce.ts", () => {
 						delay: 500,
 						config: {
 							trailing: true,
+							maxDealy: 750,
 						},
 					},
 				},
 			);
 
-			result.current[0]();
+			act(() => {
+				// calling debouncedFn
+				result.current[0]();
+			});
 
 			act(() => {
-				vi.advanceTimersByTime(500);
+				vi.advanceTimersByTime(250);
+			});
+
+			expect(fn).not.toHaveBeenCalled();
+
+			act(() => {
+				// calling debouncedFn to cancel running call
+				result.current[0]();
+			});
+
+			act(() => {
+				// advancing time by maxDelay so that fn can be called
+				vi.advanceTimersByTime(250);
+			});
+
+			expect(fn).not.toHaveBeenCalled();
+
+			act(() => {
+				// calling debouncedFn to cancel running call
+				result.current[0]();
+			});
+
+			act(() => {
+				// advancing time by maxDelay so that fn can be called
+				vi.advanceTimersByTime(250);
 			});
 
 			expect(fn).toHaveBeenCalledOnce();
